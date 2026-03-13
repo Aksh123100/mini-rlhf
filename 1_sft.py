@@ -85,7 +85,6 @@ def main():
         learning_rate=config.learning_rate,
         logging_steps=10,
         save_strategy="epoch",
-        report_to=["wandb"],
         bf16=False,  # keep CPU / simple GPU friendly
         fp16=False,
     )
