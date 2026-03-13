@@ -116,7 +116,7 @@ def main():
     trainer.save_model(config.output_dir)
     tokenizer.save_pretrained(config.output_dir)
 
-    if USE_WANDB
+    if USE_WANDB:
         wandb.finish()
 
 
