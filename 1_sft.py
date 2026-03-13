@@ -68,7 +68,7 @@ def main():
             project=config.wandb_project,
             name=config.wandb_run_name,
             config=vars(config),
-    )
+        )
 
     # Prepare tokenizer and model
     tokenizer, model = prepare_tokenizer_and_model(config)
@@ -78,14 +78,14 @@ def main():
 
     # Define Hugging Face TrainingArguments
     training_args = TrainingArguments(
-                report_to=["wandb"] if USE_WANDB else [],
+        report_to=["wandb"] if USE_WANDB else [],
         output_dir=config.output_dir,
         per_device_train_batch_size=config.batch_size,
         num_train_epochs=config.num_epochs,
         learning_rate=config.learning_rate,
         logging_steps=10,
         save_strategy="epoch",
-        report_to=["wandb"] if USE_WANDB else [],
+        report_to=["wandb"] 
         bf16=False,  # keep CPU / simple GPU friendly
         fp16=False,
     )
