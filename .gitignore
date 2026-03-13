@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+wandb/
+sft_model/
+reward_model/
+ppo_model/
