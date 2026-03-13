@@ -10,6 +10,7 @@ from transformers import (
 )
 from trl import SFTTrainer
 from tqdm.auto import tqdm
+USE_WANDB = os.getenv("USE_WANDB", "1") == "1"
 import wandb
 
 
@@ -62,10 +63,11 @@ def main():
     config = SFTConfig()
 
     # Initialize wandb for logging
-    wandb.init(
-        project=config.wandb_project,
-        name=config.wandb_run_name,
-        config=vars(config),
+    if USE_WANDB:
+        wandb.init(
+            project=config.wandb_project,
+            name=config.wandb_run_name,
+            config=vars(config),
     )
 
     # Prepare tokenizer and model
@@ -76,6 +78,7 @@ def main():
 
     # Define Hugging Face TrainingArguments
     training_args = TrainingArguments(
+                report_to=["wandb"] if USE_WANDB else [],
         output_dir=config.output_dir,
         per_device_train_batch_size=config.batch_size,
         num_train_epochs=config.num_epochs,
@@ -113,7 +116,8 @@ def main():
     trainer.save_model(config.output_dir)
     tokenizer.save_pretrained(config.output_dir)
 
-    wandb.finish()
+    if USE_WANDB
+        wandb.finish()
 
 
 if __name__ == "__main__":
