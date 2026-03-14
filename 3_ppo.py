@@ -60,9 +60,10 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
         ppo_config,
         model,
         ref_model=ref_model,
-        tokenizer=tokenizer,
-        dataset=None,  # we will feed queries manually
     )
+
+    # Attach tokenizer manually
+    ppo_trainer.tokenizer = tokenizer
 
     return ppo_trainer
 
