@@ -57,8 +57,8 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
 
     # Build PPOTrainer
     ppo_trainer = PPOTrainer(
-        config=ppo_config,
-        model=model,
+        ppo_config,
+        model,
         ref_model=ref_model,
         tokenizer=tokenizer,
         dataset=None,  # we will feed queries manually
