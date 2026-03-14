@@ -49,8 +49,6 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
         learning_rate=config.ppo_learning_rate,
         batch_size=config.ppo_batch_size,
         mini_batch_size=config.ppo_mini_batch_size,
-        log_with="wandb",
-        project_name=config.wandb_project,
     )
 
     # Policy and reference models both start from the SFT model
