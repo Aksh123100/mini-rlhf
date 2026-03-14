@@ -199,6 +199,7 @@ def main():
         )
 
         # PPOTrainer expects a list of tensors for rewards
+        query_tensor_list = [q for q in query_tensors]
         reward_tensors = [r for r in rewards]
 
         # Run a PPO optimization step
@@ -207,13 +208,14 @@ def main():
         # Log key statistics including approximate KL and reward
         mean_reward = rewards.mean().item()
         kl = stats.get("ppo/kl", 0.0)
-        wandb.log(
-            {
-                "ppo/step": step,
-                "ppo/reward_mean": mean_reward,
-                "ppo/kl": kl,
-            }
-        )
+        if USE_WANDB:
+            wandb.log(
+                {
+                    "ppo/step": step,
+                    "ppo/reward_mean": mean_reward,
+                    "ppo/kl": kl,
+                }
+            )
 
         step_bar.set_postfix({"reward": f"{mean_reward:.3f}", "kl": f"{kl:.3f}"})
 
