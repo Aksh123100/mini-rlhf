@@ -46,7 +46,6 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
     Build PPOTrainer with policy and reference models based on the SFT model.
     """
     ppo_config = PPOConfig(
-        model_name=config.sft_model_dir,
         learning_rate=config.ppo_learning_rate,
         batch_size=config.ppo_batch_size,
         mini_batch_size=config.ppo_mini_batch_size,
