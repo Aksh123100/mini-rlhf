@@ -45,13 +45,13 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
     """
     Build PPOTrainer with policy and reference models based on the SFT model.
     """
-   ppo_config = PPOConfig(
-    model_name=config.sft_model_dir,
-    learning_rate=config.ppo_learning_rate,
-    batch_size=config.ppo_batch_size,
-    mini_batch_size=config.ppo_mini_batch_size,
-    log_with=None,  # or "wandb" if this version supports it
-)
+    ppo_config = PPOConfig(
+        model_name=config.sft_model_dir,
+        learning_rate=config.ppo_learning_rate,
+        batch_size=config.ppo_batch_size,
+        mini_batch_size=config.ppo_mini_batch_size,
+        log_with=None,  # or "wandb" if your PPOConfig supports it
+    )
 
     # Policy and reference models both start from the SFT model
     model = AutoModelForCausalLMWithValueHead.from_pretrained(config.sft_model_dir)
@@ -63,7 +63,7 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
         model=model,
         ref_model=ref_model,
         tokenizer=tokenizer,
-        dataset=None,
+        dataset=None,  # we will feed queries manually
     )
 
     return ppo_trainer
