@@ -5,7 +5,7 @@ from typing import List
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer
-from trl.experimental.ppo import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
+from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
 from tqdm.auto import tqdm
 import wandb
 
@@ -46,9 +46,12 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
     Build PPOTrainer with policy and reference models based on the SFT model.
     """
     ppo_config = PPOConfig(
+        model_name=config.sft_model_dir,
         learning_rate=config.ppo_learning_rate,
         batch_size=config.ppo_batch_size,
         mini_batch_size=config.ppo_mini_batch_size,
+        log_with="wandb",
+        project_name=config.wandb_project,
     )
 
     # Policy and reference models both start from the SFT model
@@ -57,13 +60,12 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
 
     # Build PPOTrainer
     ppo_trainer = PPOTrainer(
-        ppo_config,
-        model,
+        config=ppo_config,
+        model=model,
         ref_model=ref_model,
+        tokenizer=tokenizer,
+        dataset=None,
     )
-
-    # Attach tokenizer manually
-    ppo_trainer.tokenizer = tokenizer
 
     return ppo_trainer
 
