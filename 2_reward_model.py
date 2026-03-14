@@ -13,6 +13,8 @@ from transformers import (
 from tqdm.auto import tqdm
 import wandb
 
+USE_WANDB = os.getenv("USE_WANDB", "1") == "1"
+
 
 @dataclass
 class RewardModelConfig:
@@ -90,11 +92,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Initialize wandb
-    wandb.init(
-        project=config.wandb_project,
-        name=config.wandb_run_name,
-        config=vars(config),
-    )
+    if USE_WANDB:
+        wandb.init(
+            project=config.wandb_project,
+            name=config.wandb_run_name,
+            config=vars(config),
+        )
 
     # Prepare tokenizer and reward model
     tokenizer, model = prepare_tokenizer_and_model(config)
@@ -152,7 +155,8 @@ def main():
     model.save_pretrained(config.output_dir)
     tokenizer.save_pretrained(config.output_dir)
 
-    wandb.finish()
+    if USE_WANDB:
+        wandb.finish()
 
 
 if __name__ == "__main__":
