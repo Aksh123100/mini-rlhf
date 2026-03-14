@@ -5,7 +5,7 @@ from typing import List
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer
-from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
+from trl.experimental.ppo import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
 from tqdm.auto import tqdm
 import wandb
 
