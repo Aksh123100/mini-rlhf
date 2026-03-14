@@ -9,6 +9,8 @@ from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
 from tqdm.auto import tqdm
 import wandb
 
+USE_WANDB = os.getenv("USE_WANDB", "1") == "1"
+
 from transformers import AutoModelForSequenceClassification
 
 
@@ -124,11 +126,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Initialize wandb
-    wandb.init(
-        project=config.wandb_project,
-        name=config.wandb_run_name,
-        config=vars(config),
-    )
+    if USE_WANDB:
+        wandb.init(
+            project=config.wandb_project,
+            name=config.wandb_run_name,
+            config=vars(config),
+        )
 
     # Prepare tokenizer and PPO trainer
     tokenizer = prepare_tokenizer(config)
@@ -221,7 +224,8 @@ def main():
     ppo_trainer.model.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
 
-    wandb.finish()
+    if USE_WANDB:
+        wandb.finish()
 
 
 if __name__ == "__main__":
