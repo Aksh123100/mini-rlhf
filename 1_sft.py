@@ -95,7 +95,6 @@ def main():
         args=training_args,
         train_dataset=dataset,
         processing_class=tokenizer,
-        dataset_text_field="text",
     )
 
     # Use tqdm to show training progress
