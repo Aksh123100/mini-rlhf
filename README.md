@@ -2,9 +2,37 @@
 
 Mini RLHF Pipeline
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/copilot/run-repo-in-colab/mini_rlhf_colab.ipynb)
+
 This project implements a **minimal end‑to‑end RLHF (Reinforcement Learning from Human Feedback) pipeline** using GPT‑2 and the Anthropic `hh-rlhf` preference dataset. RLHF is a training paradigm where we start from a supervised model, learn a reward model from human preferences, and then optimize the policy with reinforcement learning so that it produces outputs that humans prefer. Instead of directly learning from explicit labels, the model learns from *comparisons* between outputs (for example, "chosen" vs "rejected" responses) and is pushed towards behaviors that score higher under a learned reward function.
 
 In practice, modern large language models are usually first pre‑trained on large unsupervised corpora, then **supervised fine‑tuned (SFT)** on high‑quality instruction‑following examples, and finally **fine‑tuned with RLHF**. The RLHF phase uses a reward model trained on human preference data and an RL algorithm such as PPO to adjust the base model so that it aligns better with human values and expectations. This repository demonstrates this flow on a much smaller scale using GPT‑2, a small dataset subset, and very small batch sizes so that it can run on modest hardware.
+
+## Quick Start — Run in Google Colab
+
+The easiest way to try the pipeline is the one-click Colab notebook — no local setup required.
+
+**Step 1 — Open the notebook**
+
+Click the badge below:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/copilot/run-repo-in-colab/mini_rlhf_colab.ipynb)
+
+**Step 2 — Enable GPU**
+
+In Colab: **Runtime → Change runtime type → Hardware accelerator → T4 GPU → Save**
+
+(Without a GPU the training steps will be very slow.)
+
+**Step 3 — Run all cells**
+
+In Colab: **Runtime → Run all** (or press `Ctrl+F9`)
+
+The notebook will automatically:
+1. Clone this repository inside Colab.
+2. Install all required packages (`pip install -r requirements.txt`).
+3. Optionally log in to Weights & Biases — leave `USE_WANDB = False` to skip.
+4. Run all four training steps in order (SFT → Reward Model → PPO → Eval).
 
 ## Installation
 

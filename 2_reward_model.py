@@ -145,10 +145,12 @@ def main():
             epoch_loss += loss.item()
 
             progress.set_postfix({"loss": loss.item()})
-            wandb.log({"reward_model/loss": loss.item(), "step": global_step})
+            if USE_WANDB:
+                wandb.log({"reward_model/loss": loss.item(), "step": global_step})
 
         avg_loss = epoch_loss / len(dataloader)
-        wandb.log({"reward_model/epoch_loss": avg_loss, "epoch": epoch + 1})
+        if USE_WANDB:
+            wandb.log({"reward_model/epoch_loss": avg_loss, "epoch": epoch + 1})
 
     # Save the trained reward model
     os.makedirs(config.output_dir, exist_ok=True)
