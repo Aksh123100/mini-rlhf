@@ -2,9 +2,25 @@
 
 Mini RLHF Pipeline
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/main/mini_rlhf_colab.ipynb)
+
 This project implements a **minimal end‑to‑end RLHF (Reinforcement Learning from Human Feedback) pipeline** using GPT‑2 and the Anthropic `hh-rlhf` preference dataset. RLHF is a training paradigm where we start from a supervised model, learn a reward model from human preferences, and then optimize the policy with reinforcement learning so that it produces outputs that humans prefer. Instead of directly learning from explicit labels, the model learns from *comparisons* between outputs (for example, "chosen" vs "rejected" responses) and is pushed towards behaviors that score higher under a learned reward function.
 
 In practice, modern large language models are usually first pre‑trained on large unsupervised corpora, then **supervised fine‑tuned (SFT)** on high‑quality instruction‑following examples, and finally **fine‑tuned with RLHF**. The RLHF phase uses a reward model trained on human preference data and an RL algorithm such as PPO to adjust the base model so that it aligns better with human values and expectations. This repository demonstrates this flow on a much smaller scale using GPT‑2, a small dataset subset, and very small batch sizes so that it can run on modest hardware.
+
+## Run in Google Colab
+
+The easiest way to run this pipeline is via the provided Colab notebook.
+Click the badge below (or at the top of this page) to open it directly in Colab,
+then set the runtime to **GPU** and run all cells in order.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/main/mini_rlhf_colab.ipynb)
+
+The notebook:
+1. Clones this repository inside Colab.
+2. Installs all required packages.
+3. Optionally logs in to Weights & Biases (set `USE_WANDB = True` in the notebook cell to enable).
+4. Runs each of the four pipeline steps in order.
 
 ## Installation
 

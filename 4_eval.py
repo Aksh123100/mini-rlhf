@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from typing import List, Tuple
 
@@ -10,6 +11,8 @@ from transformers import (
 )
 from tqdm.auto import tqdm
 import wandb
+
+USE_WANDB = os.getenv("USE_WANDB", "1") == "1"
 
 
 @dataclass
@@ -169,11 +172,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Initialize wandb
-    wandb.init(
-        project=config.wandb_project,
-        name=config.wandb_run_name,
-        config=vars(config),
-    )
+    if USE_WANDB:
+        wandb.init(
+            project=config.wandb_project,
+            name=config.wandb_run_name,
+            config=vars(config),
+        )
 
     # Prepare prompts
     prompts = prepare_prompts(config)
@@ -207,15 +211,16 @@ def main():
     print_example_pairs(prompts, base_responses, sft_responses, ppo_responses, num_examples=3)
 
     # Log aggregate statistics to wandb
-    wandb.log(
-        {
-            "eval/base_mean_reward": base_scores.mean().item(),
-            "eval/sft_mean_reward": sft_scores.mean().item(),
-            "eval/ppo_mean_reward": ppo_scores.mean().item(),
-        }
-    )
+    if USE_WANDB:
+        wandb.log(
+            {
+                "eval/base_mean_reward": base_scores.mean().item(),
+                "eval/sft_mean_reward": sft_scores.mean().item(),
+                "eval/ppo_mean_reward": ppo_scores.mean().item(),
+            }
+        )
 
-    wandb.finish()
+        wandb.finish()
 
 
 if __name__ == "__main__":
