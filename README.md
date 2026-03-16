@@ -2,7 +2,7 @@
 
 Mini RLHF Pipeline
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/main/mini_rlhf_colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/copilot/run-repo-in-colab/mini_rlhf_colab.ipynb)
 
 This project implements a **minimal end‑to‑end RLHF (Reinforcement Learning from Human Feedback) pipeline** using GPT‑2 and the Anthropic `hh-rlhf` preference dataset. RLHF is a training paradigm where we start from a supervised model, learn a reward model from human preferences, and then optimize the policy with reinforcement learning so that it produces outputs that humans prefer. Instead of directly learning from explicit labels, the model learns from *comparisons* between outputs (for example, "chosen" vs "rejected" responses) and is pushed towards behaviors that score higher under a learned reward function.
 
@@ -14,7 +14,7 @@ The easiest way to run this pipeline is via the provided Colab notebook.
 Click the badge below (or at the top of this page) to open it directly in Colab,
 then set the runtime to **GPU** and run all cells in order.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/main/mini_rlhf_colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksh123100/mini-rlhf/blob/copilot/run-repo-in-colab/mini_rlhf_colab.ipynb)
 
 The notebook:
 1. Clones this repository inside Colab.
