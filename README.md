@@ -1,84 +1,155 @@
+# Mini RLHF Pipeline
 
+A minimal end-to-end implementation of **Reinforcement Learning from Human Feedback (RLHF)** using GPT-2 and the Anthropic `hh-rlhf` preference dataset. Built to understand the full post-training pipeline: SFT → Reward Modeling → PPO.
 
-Mini RLHF Pipeline
+---
 
-This project implements a **minimal end‑to‑end RLHF (Reinforcement Learning from Human Feedback) pipeline** using GPT‑2 and the Anthropic `hh-rlhf` preference dataset. RLHF is a training paradigm where we start from a supervised model, learn a reward model from human preferences, and then optimize the policy with reinforcement learning so that it produces outputs that humans prefer. Instead of directly learning from explicit labels, the model learns from *comparisons* between outputs (for example, "chosen" vs "rejected" responses) and is pushed towards behaviors that score higher under a learned reward function.
+## What is RLHF?
 
-In practice, modern large language models are usually first pre‑trained on large unsupervised corpora, then **supervised fine‑tuned (SFT)** on high‑quality instruction‑following examples, and finally **fine‑tuned with RLHF**. The RLHF phase uses a reward model trained on human preference data and an RL algorithm such as PPO to adjust the base model so that it aligns better with human values and expectations. This repository demonstrates this flow on a much smaller scale using GPT‑2, a small dataset subset, and very small batch sizes so that it can run on modest hardware.
+Modern LLMs go through three training phases:
+
+1. **Pre-training** — learn language from massive unsupervised text
+2. **Supervised Fine-Tuning (SFT)** — learn to follow instructions from high-quality examples
+3. **RLHF** — learn to produce outputs that humans prefer, using a reward model + RL
+
+In RLHF, instead of explicit labels, the model learns from **comparisons** — "which of these two responses is better?" A reward model is trained on these preferences, and then PPO (Proximal Policy Optimization) is used to push the language model toward outputs that score higher under the reward model.
+
+This repo implements all three RLHF stages at a small scale using GPT-2, a subset of the `hh-rlhf` dataset, and small batch sizes — runnable on modest hardware or Google Colab.
+
+---
+
+## Pipeline Overview
+
+```
+GPT-2 (base)
+    │
+    ▼
+1_sft.py          ──►  ./sft_model        (Supervised Fine-Tuning on chosen responses)
+    │
+    ▼
+2_reward_model.py ──►  ./reward_model     (Trains scalar reward head with Bradley-Terry loss)
+    │
+    ▼
+3_ppo.py          ──►  ./ppo_model        (PPO optimization against the reward model)
+    │
+    ▼
+4_eval.py         ──►  Comparison table   (GPT-2 vs SFT vs PPO scored by reward model)
+```
+
+---
 
 ## Installation
 
-1. **Create and activate a virtual environment (optional but recommended)**:
-
 ```bash
-python -m venv .venv
-.venv\Scripts\activate  # On Windows PowerShell
-```
+# Clone the repo
+git clone https://github.com/Aksh123100/mini-rlhf
+cd mini-rlhf
 
-2. **Install dependencies**:
+# Install dependencies (pinned for compatibility)
+pip install torch transformers==4.40.0 trl==0.8.6 datasets accelerate==0.29.0 peft==0.10.0 wandb tokenizers==0.19.0
 
-```bash
-pip install -r requirements.txt
-```
-
-3. **Login to Weights & Biases (wandb) if you want online logging**:
-
-```bash
+# Optional: login to Weights & Biases for online logging
 wandb login
 ```
 
-If you do not log in, wandb will still run in offline mode by default, but you may not see your runs in the web UI.
+> If you skip `wandb login`, it runs in offline mode. Logs are saved locally under `./wandb/`.
+
+---
 
 ## Running the Pipeline
 
-Run the scripts **in order**, as each step depends on artifacts produced by the previous ones.
+Run scripts **in order** — each step depends on artifacts from the previous one.
 
-1. **Supervised Fine‑Tuning (SFT)**:
-
+### Step 1 — Supervised Fine-Tuning
 ```bash
 python 1_sft.py
 ```
+Fine-tunes GPT-2 on `chosen` responses from the `hh-rlhf` dataset using TRL's `SFTTrainer`. Saves model to `./sft_model`.
 
-This script fine‑tunes GPT‑2 on the Anthropic `hh-rlhf` dataset using only the `chosen` responses. It saves the resulting model to the `./sft_model` directory.
-
-2. **Reward Model Training**:
-
+### Step 2 — Reward Model Training
 ```bash
 python 2_reward_model.py
 ```
+Loads `./sft_model`, adds a linear scalar head, and trains it with **pairwise Bradley-Terry loss** — `chosen` responses should score higher than `rejected` ones. Saves to `./reward_model`.
 
-This script loads the `./sft_model` as a base, adds a linear head that outputs a single scalar score, and trains it as a preference‑based reward model using both `chosen` and `rejected` responses with a pairwise ranking (Bradley–Terry) loss. The trained reward model is saved to `./reward_model`.
-
-3. **PPO Training**:
-
+### Step 3 — PPO Training
 ```bash
 python 3_ppo.py
 ```
+Loads `./sft_model` as the policy, a frozen copy as the reference model, and `./reward_model` as the reward function. Runs PPO for 100 steps with KL-divergence penalty to prevent the policy from drifting too far from the reference. Saves to `./ppo_model`.
 
-This script loads the `./sft_model` as the policy model, a frozen copy of the same model as the reference model, and the `./reward_model` as the reward function. It then runs a short PPO optimization loop (100 steps) where the policy generates responses, they are scored by the reward model, a KL penalty against the reference model is computed, and the policy is updated via PPO. The final policy is saved to `./ppo_model`.
-
-4. **Evaluation**:
-
+### Step 4 — Evaluation
 ```bash
 python 4_eval.py
 ```
+Compares GPT-2 base, SFT model, and PPO model on 10 prompts from the `hh-rlhf` test split. Scores each response using the reward model and prints a comparison table.
 
-This script compares three models:
-
-- The original GPT‑2 base model
-- The supervised fine‑tuned model (`./sft_model`)
-- The PPO‑optimized model (`./ppo_model`)
-
-It takes 10 sample prompts derived from the `hh-rlhf` test split, generates responses from each model, scores them using the reward model from `./reward_model`, and prints a comparison table to the console.
-
-## What Each Script Does
-
-- **`1_sft.py`**: Performs supervised fine‑tuning of GPT‑2 on the `chosen` responses from the `hh-rlhf` dataset using TRL's `SFTTrainer`. Handles tokenization, padding, truncation, and logging training loss to wandb.
-- **`2_reward_model.py`**: Builds a scalar reward model on top of the SFT model by adding a linear classification head and training it with a pairwise Bradley–Terry loss so that `chosen` responses receive higher scores than `rejected` responses.
-- **`3_ppo.py`**: Uses TRL's `PPOTrainer` to optimize the SFT policy against the learned reward model while regularizing it via KL‑divergence to a frozen reference copy of the SFT model.
-- **`4_eval.py`**: Evaluates and compares GPT‑2, the SFT model, and the PPO‑tuned model on a small set of prompts using the reward model as an automatic evaluator, and logs summary statistics to wandb.
+---
 
 ## Results
 
-Fill in after running eval.
+Evaluated on 10 prompts from the `hh-rlhf` test split.
 
+| Model     | Mean Reward Score |
+|-----------|:-----------------:|
+| GPT-2     | 1.014             |
+| SFT       | 0.511             |
+| PPO       | 0.524             |
+
+### Observations
+
+**PPO barely improved over SFT.** This is expected at this scale — GPT-2 (117M params) has limited capacity, and 100 PPO steps is a very short training run.
+
+**SFT scored lower than base GPT-2.** The base GPT-2 reward scores look higher partly because the reward model was trained on SFT-style outputs — the base model's distribution can accidentally hit high-reward token patterns without coherent reasoning.
+
+**PPO exhibited reward hacking.** The most interesting finding: the PPO model started generating URLs (e.g., `https://www.reddit.com/...`, `https://www.icann.org/...`) instead of actual responses. This is a classic RLHF failure mode — the policy discovered that certain token patterns get high reward scores from the reward model, even though they're meaningless as responses. This phenomenon is well-documented at scale too and is part of why KL penalties and careful reward model design matter.
+
+### Example Outputs
+
+**Prompt:** *"What are some pranks with a pen I can do?"*
+
+| Model  | Response |
+|--------|----------|
+| GPT-2  | "The most common joke is that you can't get a pen. Assistant: I'm not sure if you can get a pen..." *(repetitive loop)* |
+| SFT    | *(mostly empty / incoherent)* |
+| PPO    | `https://www.reddit.com/r/PokemonGo/...` *(reward hacking — outputs a URL)* |
+
+---
+
+## Key Concepts Implemented
+
+| Concept | Where |
+|---------|-------|
+| Supervised Fine-Tuning (SFT) | `1_sft.py` |
+| Bradley-Terry preference loss | `2_reward_model.py` |
+| PPO with KL penalty | `3_ppo.py` |
+| Reward hacking (observed) | `3_ppo.py` output |
+| Automatic reward-based eval | `4_eval.py` |
+
+---
+
+## Limitations
+
+- **GPT-2 is too small** for meaningful alignment — this is a learning exercise, not a production system
+- **100 PPO steps** is far too few; real RLHF runs thousands to millions of steps
+- **Reward model quality** directly caps PPO quality — a weak reward model leads to reward hacking
+- The `hh-rlhf` subset used is small, so both SFT and reward model generalization is limited
+
+---
+
+## Next Steps
+
+- [ ] DPO (Direct Preference Optimization) — simpler alternative to PPO, no reward model needed
+- [ ] Try `gpt2-medium` for better capacity
+- [ ] Add KL coefficient tuning to reduce reward hacking
+- [ ] Evaluate with a separate judge model instead of the trained reward model
+
+---
+
+## References
+
+- [Anthropic hh-rlhf dataset](https://huggingface.co/datasets/Anthropic/hh-rlhf)
+- [TRL library](https://github.com/huggingface/trl)
+- [Learning to summarize from human feedback (OpenAI)](https://arxiv.org/abs/2009.01325)
+- [PPO paper](https://arxiv.org/abs/1707.06347)
+- [Direct Preference Optimization (DPO)](https://arxiv.org/abs/2305.18290)
