@@ -6,7 +6,7 @@ import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer
 from trl import PPOTrainer, AutoModelForCausalLMWithValueHead
-from trl.core import PPOConfig
+from trl import PPOConfig
 from tqdm.auto import tqdm
 import wandb
 
@@ -51,7 +51,6 @@ def build_ppo_trainer(config: PPOPipelineConfig, tokenizer):
         learning_rate=config.ppo_learning_rate,
         batch_size=config.ppo_batch_size,
         mini_batch_size=config.ppo_mini_batch_size,
-        log_with=None,  # or "wandb" if your PPOConfig supports it
     )
 
     # Policy and reference models both start from the SFT model
@@ -168,7 +167,7 @@ def main():
         # Generate responses from the policy model
         # We use the built-in generate from PPOTrainer's model
         with torch.no_grad():
-            response_ids = ppo_trainer.model.generate(
+            response_ids = ppo_trainer.model.pretrained_model.generate(
                 **tokenized_prompts,
                 max_new_tokens=config.max_generation_length,
                 pad_token_id=tokenizer.pad_token_id,
@@ -180,7 +179,7 @@ def main():
         responses_text: List[str] = []
 
         for i in range(len(batch_prompts)):
-            query_len = query_tensors[i].shape[0]
+            query_len = tokenized_prompts["attention_mask"][i].sum().item()
             full = response_ids[i]
             # Take only the new tokens generated after the prompt
             gen = full[query_len:]
@@ -201,10 +200,10 @@ def main():
 
         # PPOTrainer expects a list of tensors for rewards
         query_tensor_list = [q for q in query_tensors]
-        reward_tensors = [r for r in rewards]
+        reward_tensors = [r.unsqueeze(0) for r in rewards]
 
         # Run a PPO optimization step
-        stats = ppo_trainer.step(query_tensors, response_tensors, reward_tensors)
+        stats = ppo_trainer.step(query_tensor_list, response_tensors, reward_tensors)
 
         # Log key statistics including approximate KL and reward
         mean_reward = rewards.mean().item()
